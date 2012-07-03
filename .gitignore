@@ -1,1 +1,8 @@
 target
+bin
+logs
+.target
+.settings
+.project
+.classpath
+.scala_dependencies
