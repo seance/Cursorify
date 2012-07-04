@@ -41,17 +41,17 @@ define ['jquery', 'less'], ($) -> $ ->
 				console.log "Joined, my CID is #{message.cid}"
 				clientId = message.cid
 			when "updates"
-				drawUpdates message.updates
+				animateUpdates message.updates
 			when "quit"
 				console.log "Client CID #{message.cid} quit"
 				quitted[message.cid] = true
 				$("##{message.cid}").remove()
 
-	drawUpdates = (updates) ->
+	animateUpdates = (updates) ->
 		for update in updates
-			drawUpdate update
+			animateUpdate update
 			
-	drawUpdate = (update) ->
+	animateUpdate = (update) ->
 		frames = update.trail.length
 		interval = samplingInterval * (sampleCount / frames)
 		asyncLoop frames, interval, (frame) ->
