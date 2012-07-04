@@ -20,7 +20,7 @@ object Application extends Controller {
   
   lazy val cursorify = {
     val actor = Akka.system.actorOf(Props[Cursorify])
-    Akka.system.scheduler.schedule(1 second, 1 second, actor, PushUpdates())
+    Akka.system.scheduler.schedule(250 milliseconds, 250 milliseconds, actor, PushUpdates())
     actor
   }
   
@@ -51,35 +51,59 @@ class Cursorify extends Actor {
   
   import play.api.libs.json.Json
   import play.api.libs.json.Reads
+  import play.api.libs.json.Writes
   
   var clients = Map[String, Client]()
   
   def receive = {
     
     case Join(cid, handle, out) =>
-      clients = clients + (cid -> new Client(handle, out, true, true, JsArray()))
-      
+      if (!clients.contains(cid)) {
+    	  println("Cursorify: Join: "+handle+" ("+cid+")")
+	      clients = clients + (cid -> new Client(handle, out, true, true, JsArray()))
+	      out.push(Map("op" -> "joined", "cid" -> cid))
+      }
+  
     case Publish(cid, value) =>
+      println("Cursorify: Publish: "+value)
       clients.get(cid).map(_.pub = value.as[Boolean])
       
     case Subscribe(cid, value) =>
+      println("Cursorify: Subscribe: "+value)
       clients.get(cid).map(_.sub = value.as[Boolean])
       
     case Update(cid, trail) =>
       clients.get(cid).map(_.trail = trail)
       
     case Quit(cid) =>
-      clients = clients - cid
-      
+      if (clients.contains(cid)) {
+	      println("Cursorify: Quit: "+cid)
+	      clients = clients - cid
+	      for (client <- clients.values)
+	        client.out.push(Map("op" -> "quit", "cid" -> cid))
+      }
+  
     case PushUpdates() =>
-      val data = clients.foldLeft(Seq[Map[String, JsValue]]()) { case (seq, (cid, client)) => 
-        seq :+ Map[String, JsValue]("cid" -> JsString(cid), "trail" -> client.trail)
+      val updates = clients.foldLeft(Seq[Map[String, JsValue]]()) {
+        case (seq, (cid, client)) if client.pub =>
+          seq :+ Map(
+            "cid" -> JsString(cid),
+            "handle" -> client.handle,
+            "trail" -> client.trail)
       }
       
-      for ((cid, client) <- clients if client.sub) {
-        client.out.push(Json.toJson(data))
-      }
+      val message = Map(
+          "op" -> JsString("updates"),
+          "updates" -> toJson(updates)) 
+      
+      for (client <- clients.values if client.sub)
+        client.out.push(message)
+      
+      for (client <- clients.values)
+        client.trail = JsArray()
   }
+  
+  private implicit def toJson[T: Writes](t: T): JsValue = Json.toJson(t)
 }
 
 class Client(val handle: JsValue,
