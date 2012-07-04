@@ -20,7 +20,7 @@ object Application extends Controller {
   
   lazy val cursorify = {
     val actor = Akka.system.actorOf(Props[Cursorify])
-    Akka.system.scheduler.schedule(250 milliseconds, 250 milliseconds, actor, PushUpdates())
+    Akka.system.scheduler.schedule(0 milliseconds, 200 milliseconds, actor, PushUpdates())
     actor
   }
   
@@ -60,7 +60,7 @@ class Cursorify extends Actor {
     case Join(cid, handle, out) =>
       if (!clients.contains(cid)) {
     	  println("Cursorify: Join: "+handle+" ("+cid+")")
-	      clients = clients + (cid -> new Client(handle, out, true, true, JsArray()))
+	      clients = clients + (cid -> new Client(handle, out, true, true, Seq()))
 	      out.push(Map("op" -> "joined", "cid" -> cid))
       }
   
@@ -73,11 +73,11 @@ class Cursorify extends Actor {
       clients.get(cid).map(_.sub = value.as[Boolean])
       
     case Update(cid, trail) =>
-      clients.get(cid).map(_.trail = trail)
+      clients.get(cid).map(c => c.trail = c.trail ++ trail.as[Seq[JsValue]])
       
     case Quit(cid) =>
       if (clients.contains(cid)) {
-	      println("Cursorify: Quit: "+cid)
+	      println("Cursorify: Quit: "+clients.get(cid).map(_.handle)+" ("+cid+")")
 	      clients = clients - cid
 	      for (client <- clients.values)
 	        client.out.push(Map("op" -> "quit", "cid" -> cid))
@@ -89,7 +89,7 @@ class Cursorify extends Actor {
           seq :+ Map(
             "cid" -> JsString(cid),
             "handle" -> client.handle,
-            "trail" -> client.trail)
+            "trail" -> toJson(client.trail))
       }
       
       val message = Map(
@@ -100,7 +100,7 @@ class Cursorify extends Actor {
         client.out.push(message)
       
       for (client <- clients.values)
-        client.trail = JsArray()
+        client.trail = Seq()
   }
   
   private implicit def toJson[T: Writes](t: T): JsValue = Json.toJson(t)
@@ -110,7 +110,7 @@ class Client(val handle: JsValue,
     val out: PushEnumerator[JsValue],
     var pub: Boolean,
     var sub: Boolean,
-    var trail: JsValue)
+    var trail: Seq[JsValue])
 
 case class Join(cid: String, handle: JsValue, out: PushEnumerator[JsValue])
 case class Publish(cid: String, value: JsValue)

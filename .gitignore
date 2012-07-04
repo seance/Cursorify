@@ -1,6 +1,7 @@
 target
 bin
 logs
+.cache
 .target
 .settings
 .project
