@@ -20,8 +20,6 @@ Cursorify.init = ->
 		samples = 0
 		trail = []
 		
-		# $('html').append("<div id='overlay'></div>")
-		
 		$("html").mousemove (e) ->
 			cursor.x = e.pageX
 			cursor.y = e.pageY
@@ -53,7 +51,6 @@ Cursorify.init = ->
 		if cursor.length == 0 and !quitted[cid]
 			cursor = $("<div id='#{cid}' class='cursor'></div>")
 			cursor.append $("<div class='handle'>#{handle}</div>")
-			# $('#overlay').append cursor
 			$("html").append cursor
 		cursor
 		
@@ -79,10 +76,10 @@ Cursorify.init = ->
 		handle = $("#cursorify-handle").val()
 		channel = $("#cursorify-channel").val()
 		
-		socket.send JSON.stringify({ op: 'join', handle: handle })
+		socket.send JSON.stringify({ op: 'join', filter: "#{page}?#{channel}", handle: handle })
 		
 	windowLocationNoQuery = ->
-		
+		/[^\?]+/.exec window.location.toString()
 		
 	onMessage = (e) ->
 		message = JSON.parse e.data
