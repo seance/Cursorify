@@ -77,7 +77,7 @@ class Cursorify extends Actor {
       
     case Quit(cid) =>
       if (clients.contains(cid)) {
-	      println("Cursorify: Quit: "+clients.get(cid).map(_.handle)+" ("+cid+")")
+	      println("Cursorify: Quit: "+clients.get(cid).get.handle+" ("+cid+")")
 	      clients = clients - cid
 	      for (client <- clients.values)
 	        client.out.push(Map("op" -> "quit", "cid" -> cid))
