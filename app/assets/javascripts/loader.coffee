@@ -12,7 +12,7 @@ injectLoader = (tag, options, onload) ->
 if window.Cursorify
 	window.Cursorify.init()
 	
-else	
+else
 	window.Cursorify = {}
 
 	injectLoader "link", {

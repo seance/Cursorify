@@ -1,6 +1,6 @@
 Cursorify.init = ->
 
-	cursorifyUrl = "ws://localhost:9000/cursorify"
+	cursorifyUrl = "ws://tunardus.futurice.com:9000/cursorify"
 	samplingInterval = 20
 	sampleCount = 10
 	
