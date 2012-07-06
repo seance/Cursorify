@@ -1,5 +1,5 @@
 cursorifyUrl = (path) ->
-	"http://localhost:9000/assets/" + path
+	"http://tunardus.futurice.com:9000/assets/" + path
 
 injectLoader = (tag, options, onload) ->
 	elem = document.createElement tag
