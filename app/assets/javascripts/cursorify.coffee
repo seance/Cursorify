@@ -43,8 +43,9 @@ Cursorify.init = ->
 			drawFrame update, update.trail[frame], interval, frame
 
 	drawFrame = (update, point, interval, frame) ->
-		cursor = findOrCreateCursor update.cid, update.handle
-		cursor.animate { top: point.y, left: point.x }, interval
+		if point and update.cid != clientId
+			cursor = findOrCreateCursor update.cid, update.handle
+			cursor.animate { top: point.y, left: point.x }, interval
 
 	findOrCreateCursor = (cid, handle) ->
 		cursor = $("##{cid}")
